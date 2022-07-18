@@ -1,221 +1,189 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: DynamoDB_Rest_API_3
+Description: 'userDetails'
 
 Parameters:
-  LambdaFuncPost:
+  dbTableName:
     Type: String
-    Default: DynamoDB_POST_Rest_API3
-  LambdaFuncGet:
+    Default: userDetails
+  apiName:
     Type: String
-    Default: DynamoDB_GET_Rest_API3
-  LambdaFuncUpdate:
-    Type: String
-    Default: DynamoDB_Update_Rest_API3
-  LambdaFuncDelete:
-    Type: String
-    Default: DynamoDB_Delete_Rest_API3
-  DynamoDBTableName:
-    Type: String
-    Default: DynamoDB_Rest_API3
-  APIName:
-    Type: String
-    Default: DynamoDB_Rest_API3
-  EnvironmentName:
+    Default: userDetailsAPI
+  environmentName:
     Type: String
     Default: dev
 
 
 Resources:
-  APIGatewayRestAPIUser:
+  apiGateway:
     Type: 'AWS::ApiGateway::RestApi'
     Properties:
-      Description: DynamoDB_Rest_API_Gateway
+      Description: 'userDetailsApi'
       Name:
-        Ref: APIName 
+        Ref: 'apiName' 
+        
 
-
-  APIGatewayResourcePost:
+  postResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       ParentId: !GetAtt
-        - APIGatewayRestAPIUser
+        - apiGateway
         - RootResourceId
       PathPart: "post"
    
-
-  APIGatewayResourceGet:
+  getResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       ParentId: !GetAtt
-        - APIGatewayRestAPIUser
+        - apiGateway
         - RootResourceId
       PathPart: "get"
     
-  
-  
-  APIGatewayResourceUpdate:
+  updateResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       ParentId: !GetAtt
-        - APIGatewayRestAPIUser
+        - apiGateway
         - RootResourceId
       PathPart: "update"
     
-  APIGatewayResourceDelete:
+  deleteResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       ParentId: !GetAtt
-        - APIGatewayRestAPIUser
+        - apiGateway
         - RootResourceId
       PathPart: "delete"
 
 
-  APIGatewayMethodPost:
+  postMethod:
     Type: 'AWS::ApiGateway::Method'
-    Description: Post_DynamoDB_Method
+    Description: postMethod
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
-      ResourceId: !Ref APIGatewayResourcePost
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref postResource
       HttpMethod: POST
       AuthorizationType: NONE
-      RequestParameters:
-          method.request.path.proxy: true
       Integration:
-          CacheKeyParameters:
-            - 'method.request.path.proxy'
-          RequestParameters:
-            integration.request.path.proxy: 'method.request.path.proxy'
-          Type: AWS_PROXY
-          IntegrationHttpMethod: POST
-          Uri: !Sub
-            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
-            - Arn:
-                Fn::GetAtt:
-                - LambdaFuncNamePOST
-                - Arn
-          IntegrationResponses:
-            - StatusCode: 200
-  
-  APIGatewayMethodGET:
-    Type: 'AWS::ApiGateway::Method'
-    Description: Get_DynamoDB_Method
-    Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
-      ResourceId: !Ref APIGatewayResourceGet
-      HttpMethod: GET
-      AuthorizationType: NONE
-      RequestParameters:
-        method.request.path.proxy: true
-      Integration:
-        CacheKeyParameters:
-          - 'method.request.path.proxy'
-        RequestParameters:
-          integration.request.path.proxy: 'method.request.path.proxy'
         Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub
-          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
-          - Arn:
-              Fn::GetAtt:
-               - LambdaFuncNameGET
-               - Arn
-        IntegrationResponses:
-          - StatusCode: 200
-        
-
-  APIGatewayMethodUpdate:
+        Uri:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:apigateway:'
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                - postLambdaFunction
+                - Arn
+              - /invocations 
+  
+  getMethod:
     Type: 'AWS::ApiGateway::Method'
-    Description: Update_DynamoDB_Method
+    Description: 'getMethod'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
-      ResourceId: !Ref APIGatewayResourceUpdate
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref getResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:apigateway:'
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                - getLambdaFunction
+                - Arn
+              - /invocations
+        
+  updateMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Description: 'updateMethod'
+    Properties:
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref updateResource
       HttpMethod: PATCH
       AuthorizationType: NONE
-      RequestParameters:
-          method.request.path.proxy: true
       Integration:
-          CacheKeyParameters:
-            - 'method.request.path.proxy'
-          RequestParameters:
-            integration.request.path.proxy: 'method.request.path.proxy'
-          Type: AWS_PROXY
-          IntegrationHttpMethod: POST
-          Uri: !Sub
-            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
-            - Arn:
-                Fn::GetAtt:
-                - LambdaFuncNameUPDATE
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:apigateway:'
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                - updateLambdaFunction
                 - Arn
-          IntegrationResponses:
-            - StatusCode: 200
+              - /invocations
  
-  APIGatewayMethodDelete:
+  deleteMethod:
     Type: 'AWS::ApiGateway::Method'
-    Description: Delete_DynamoDB_Method
+    Description: 'deleteMethod'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
-      ResourceId: !Ref APIGatewayResourceDelete
+      RestApiId: !Ref apiGateway
+      ResourceId: !Ref deleteResource
       HttpMethod: DELETE
       AuthorizationType: NONE
-      RequestParameters:
-          method.request.path.proxy: true
       Integration:
-          CacheKeyParameters:
-            - 'method.request.path.proxy'
-          RequestParameters:
-            integration.request.path.proxy: 'method.request.path.proxy'
-          Type: AWS_PROXY
-          IntegrationHttpMethod: POST
-          Uri: !Sub
-            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations
-            - Arn:
-                Fn::GetAtt:
-                - LambdaFuncNameDELETE
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri:
+            Fn::Join:
+            - ''
+            - - 'arn:aws:apigateway:'
+              - Ref: AWS::Region
+              - :lambda:path/2015-03-31/functions/
+              - Fn::GetAtt:
+                - deleteLambdaFunction
                 - Arn
-          IntegrationResponses:
-            - StatusCode: 200
+              - /invocations
 
 
-  APIGatewayDeploymentPost:
+  postDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       StageName:
-        Ref: EnvironmentName
+        Ref: environmentName
     DependsOn:
-      - APIGatewayMethodPost
+      - postMethod
 
-  APIGatewayDeploymentGet:
+  getDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       StageName:
-        Ref: EnvironmentName
+        Ref: environmentName
     DependsOn:
-      - APIGatewayMethodGET
- 
-  APIGatewayDeploymentUpdate:
+      - getMethod
+    
+  updateDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       StageName:
-        Ref: EnvironmentName
+        Ref: environmentName
     DependsOn:
-      - APIGatewayMethodUpdate
+      - updateMethod
   
-  APIGatewayDeploymentDelete:
+  deleteDeployment:
     Type: 'AWS::ApiGateway::Deployment'
     Properties:
-      RestApiId: !Ref APIGatewayRestAPIUser
+      RestApiId: !Ref apiGateway
       StageName:
-        Ref: EnvironmentName
+        Ref: environmentName
     DependsOn:
-      - APIGatewayMethodDelete
-
+      - deleteMethod
+    
 
   IAMRole:
     Type: 'AWS::IAM::Role'
@@ -253,16 +221,20 @@ Resources:
 
   DynamoDBTable:
       Type: 'AWS::DynamoDB::Table'
-      Description: DynamoDB_Rest_Api_Table
+      Description: 'userDetailsTable'
       Properties:
         TableName:
-          Ref: DynamoDBTableName
+          Ref: dbTableName
         AttributeDefinitions:
           - AttributeName: "id"
+            AttributeType: "S"
+          - AttributeName: "mobileNumber"
             AttributeType: "S"
         KeySchema:
           - AttributeName: "id"
             KeyType: "HASH"
+          - AttributeName: "mobileNumber"
+            KeyType: "RANGE"
         ProvisionedThroughput:
           ReadCapacityUnits: '1'
           WriteCapacityUnits: '1'
@@ -270,37 +242,36 @@ Resources:
         - IAMRole
 
 
-  LambdaFuncNamePOST:
+  postLambdaFunction:
     Type: 'AWS::Lambda::Function'
-    Description: Post_Lambda_Function
+    Description: 'postFunction'
     Properties:
       Handler: handler.postData
       Runtime: nodejs12.x
       Timeout: 300
       Role: !GetAtt IAMRole.Arn
 
-  LambdaFuncNameGET:
+  getLambdaFunction:
     Type: 'AWS::Lambda::Function'
-    Description: Get_Lambda_Function
+    Description: 'getFunction'
     Properties:
       Handler: handler.getData
       Runtime: nodejs12.x
       Timeout: 300
       Role: !GetAtt IAMRole.Arn
 
-  
-  LambdaFuncNameUPDATE:
+  updateLambdaFunction:
     Type: 'AWS::Lambda::Function'
-    Description: Update_Lambda_Function
+    Description: 'updateFunction'
     Properties:
       Handler: handler.updateData
       Runtime: nodejs12.x
       Timeout: 300
       Role: !GetAtt IAMRole.Arn
   
-  LambdaFuncNameDELETE:
+  deleteLambdaFunction:
     Type: 'AWS::Lambda::Function'
-    Description: Delete_Lambda_Function
+    Description: 'deleteFunction'
     Properties:
       Handler: handler.deleteData
       Runtime: nodejs12.x
@@ -308,39 +279,35 @@ Resources:
       Role: !GetAtt IAMRole.Arn
    
 
-  APIGatewayPermissionPost:
+  postPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt LambdaFuncNamePOST.Arn
+      FunctionName: !GetAtt postLambdaFunction.Arn
       Principal: apigateway.amazonaws.com
    
-
-  APIGatewayPermissionGet:
+  getPermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt LambdaFuncNameGET.Arn
+      FunctionName: !GetAtt getLambdaFunction.Arn
       Principal: apigateway.amazonaws.com
-    DependsOn:
-      - APIGatewayDeploymentGet
   
-  
-  APIGatewayPermissionUpdate:
+  updatePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt LambdaFuncNameUPDATE.Arn
+      FunctionName: !GetAtt updateLambdaFunction.Arn
       Principal: apigateway.amazonaws.com
    
-  APIGatewayPermissionDelete:
+  deletePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
-      FunctionName: !GetAtt LambdaFuncNameDELETE.Arn
+      FunctionName: !GetAtt deleteLambdaFunction.Arn
       Principal: apigateway.amazonaws.com
     
  
 Outputs:
  InvokeURL:
-  Value: !Sub https://${APIGatewayRestAPIUser}.execute-api.${AWS::Region}.amazonaws.com/${EnvironmentName}
+  Value: !Sub https://${apiGateway}.execute-api.${AWS::Region}.amazonaws.com/${environmentName}
