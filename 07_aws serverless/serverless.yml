@@ -1,0 +1,73 @@
+service: service-aws-serverless
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+  stage: dev
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:  
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "*"
+            
+functions:
+  createloginHistory:
+    handler: handler.loginHistory
+    events:
+      - http:
+          path: /v1
+          method: POST
+          cors: true
+
+  listloginHistory:
+    handler: handler.listloginHistory
+    events:
+      - http:
+          path: /v1
+          method: GET
+          cors: true
+
+  getloginHistory:
+    handler: handler.getloginHistory
+    events:
+      - http:
+          path: /v1/{id}
+          method: GET
+          cors: true
+
+  existloginHistory:
+    handler: handler.existloginHistory
+    events:
+      - http:
+          path: /v1/login
+          method: POST
+          cors: true
+
+resources:
+  Resources:
+    LoginHistoryDB:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "S"
+        KeySchema:
+          - 
+            AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1 
+        TableName: 'LoginHistoryDB'
+     
