@@ -283,3 +283,79 @@ module.exports.existloginHistory = async (event, context, callback) => {
 };
 
 
+
+
+
+'use strict';
+const AWS = require('aws-sdk');
+// const { ErrorAndSucessMessage, sendResponse } = require('./error')
+const dynamodb = new AWS.DynamoDB.DocumentClient({ region: "us-east-1" });
+
+
+// exports.getloginHistory();
+
+
+const getloginHistory = async (id, email) => {
+  const params = {
+    TableName:'service-aws-serverless-dev-LoginHistoryDB-15QE8GSNH06H7',
+    Key: {
+      "id": id,
+      "email": email
+    }
+  };
+  try {
+    var res = await dynamodb.get(params).promise();
+    console.log(res, ".........")
+    return res
+  } catch (err) {
+    console.log(err)
+    return false;
+  }
+
+};
+
+// exports.getloginHistory();
+
+// // already exist
+exports.existloginHistory = async (event) => {
+  // let body = event.body;
+  // let body = JSON.parse(event.body);
+  const body = require('body-parser');
+
+  if (!body["id"] || !body["email"]) {
+    console.log("ttttte") ;
+    // return 
+  }
+
+  try {
+    var result = await getloginHistory(body["id"],body["email"])
+  if (result.Items.loginType == "app" && result.Items.status == "true") {
+    console.log(result,"your alredy login")
+    return result   
+}
+
+else if (result.Items.loginType == "app" && result.Items.status == "false") {
+  console.log(result,"Your first logout and try agian login")
+}
+// else(result.Items.loginType == "app" && result.Items.status == "false")
+// {
+//   console.log(result,"some other problem")
+// }
+  
+} catch (error) {
+  console.log(error);
+}
+
+// var result = await getloginHistory("1","test123@gmail.com")
+// return result;
+
+}
+
+exports.existloginHistory();
+
+
+
+
+
+
+
