@@ -1,0 +1,98 @@
+service: service-aws-serverless
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+  stage: dev
+
+  environment:
+    USER_POOL_ID: us-east-1_0SCDY8avO
+    CLIENT_ID: 5ak7puu13hm1mr1ijqmnf6a5nd
+    LoginHistoryDBTable: !Ref LoginHistoryDB
+    Aws_Region: us-east-1
+    Cognito_Region: us-east-1
+    
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:  
+        - dynamodb:*
+        - lambda:*
+        - cognito-sync:*
+        - cognito-identity:*
+        - cognito-idp:*
+      Resource: "*"
+            
+functions:
+  createloginHistory:
+    handler: handler.loginHistory
+    events:
+      - http:
+          path: /v1
+          method: POST
+          cors: true
+
+  listloginHistory:
+    handler: handler.listloginHistory
+    events:
+      - http:
+          path: /v1
+          method: GET
+          cors: true
+
+  getloginHistory:
+    handler: handler.getloginHistory
+    events:
+      - http:
+          path: /v1/{id}
+          method: GET
+          cors: true
+
+  existloginHistory:
+    handler: handler.existloginHistory
+    events:
+      - http:
+          path: /v1/login
+          method: POST
+          cors: true
+
+  SignUp:
+    handler: user.SignUp
+    events:
+      - http:
+          path: SignUp
+          method: POST
+          cors: true
+          integration: lambda
+  
+  getCognitoUser:
+    handler: user.getCognitoUser
+    events:
+      - http:
+          path: getCognitoUser
+          method: post
+          cors: true
+          integration: lambda
+
+resources:
+  Resources:
+    LoginHistoryDB:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: "id"
+            AttributeType: "S"
+        KeySchema:
+          - 
+            AttributeName: "id"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1 
+        # TableName: 'LoginHistoryDB'
+     
